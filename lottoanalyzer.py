@@ -9,5 +9,3 @@ for row in rows:
     for cell in row:
         values.append(cell.value)
     print(values)
-
-print("OK")
