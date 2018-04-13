@@ -50,7 +50,7 @@ class LottoAnalyzer():
     def savetoDB(self, path, data):
         con = sqlite3.connect(path)
         cursor = con.cursor()
-        cursor.execute("CREATE TABLE lotto(회차 int, 추첨일 text, 당첨자1 int, 당첨금1 int, 당첨자2 int, 당첨금2 int, \
+        cursor.execute("CREATE TABLE if not exists lotto(회차 int, 추첨일 text, 당첨자1 int, 당첨금1 int, 당첨자2 int, 당첨금2 int, \
             당첨자3 int, 당첨금3 int, 당첨자4 int, 당첨금4 int, 당첨자5 int, 당첨금5 int, 번호1 int, 번호2 int, \
             번호3 int, 번호4 int, 번호5 int, 번호6 int, 보너스 int)")
 
