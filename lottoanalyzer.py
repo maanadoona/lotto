@@ -4,15 +4,16 @@ import sqlite3
 class LottoAnalyzer():
     lottoInfo = {}
 
-    def setData(self, filename):
+    def readFromExcel(self, filename):
         book = openpyxl.load_workbook(filename)
         sheet = book.active
-        data_ragne = sheet['B4':'T804']
+        startPos = 'B4'
+        endPos = 'T' + str(sheet.max_row)
+        data_range = sheet[startPos:endPos]
 
-        #for row in data_ragne:
-        for row in range(len(data_ragne)-1, -1, -1):
+        for row in range(len(data_range)-1, -1, -1):
             values = []
-            for cell in data_ragne[row]:
+            for cell in data_range[row]:
                 values.append(cell.value)
 
             try:
@@ -47,10 +48,10 @@ class LottoAnalyzer():
             dateList.append(value['추첨일'])
         return dateList
 
-    def savetoDB(self, path, data):
+    def saveToDB(self, path, data):
         con = sqlite3.connect(path)
         cursor = con.cursor()
-        cursor.execute("CREATE TABLE lotto(회차 int, 추첨일 text, 당첨자1 int, 당첨금1 int, 당첨자2 int, 당첨금2 int, \
+        cursor.execute("CREATE TABLE if not exists lotto(회차 int, 추첨일 text, 당첨자1 int, 당첨금1 int, 당첨자2 int, 당첨금2 int, \
             당첨자3 int, 당첨금3 int, 당첨자4 int, 당첨금4 int, 당첨자5 int, 당첨금5 int, 번호1 int, 번호2 int, \
             번호3 int, 번호4 int, 번호5 int, 번호6 int, 보너스 int)")
 
@@ -67,14 +68,48 @@ class LottoAnalyzer():
         con.commit()
         con.close()
 
+    def readFromDB(self, db, table):
+        con = sqlite3.connect(db)
+        cursor = con.cursor()
+
+        query = "select * from {0}".format(table)
+        cursor.execute(query)
+        rows = cursor.fetchall()
+
+        con.close()
+
+        return rows
 
 if __name__ == "__main__":
     lottoAnalyzer = LottoAnalyzer()
-    result = lottoAnalyzer.setData("lotto.xlsx")
+
+    # 기존 DB 로드
+    dbData = lottoAnalyzer.readFromDB("./lotto.db", "lotto")
+    #for d in dbData:
+        #print(d)
+
+    # 입력 데이터
+    inputData = lottoAnalyzer.readFromExcel("lotto.xlsx")
+    #for key, data in inputData.items():
+       #print(key, data)
+
+    # 기존과 입력 비교하여 저장할 데이터 추출
+    toSaveNum = len(inputData) - len(dbData)
+    print(toSaveNum)
+
+    toSaveData = {}
+    for i in range(len(inputData) - toSaveNum+1, len(inputData)+1):
+        toSaveData[i] = inputData[i]
+
+    for j in toSaveData:
+        print(toSaveData[j])
+
+    lottoAnalyzer.saveToDB("./lotto.db", toSaveData)
 
     #for index, info in result.items():
         #print(index, info)
-    lottoAnalyzer.savetoDB("./lotto.db", result)
+    #lottoAnalyzer.saveToDB("./lotto.db", result)
+
 
     #print(lottoAnalyzer.getTotalNum())
     #print(lottoAnalyzer.getDateList())
